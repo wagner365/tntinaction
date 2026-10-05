@@ -1,0 +1,29 @@
+{
+  "_readme": "All prices in USD. Edit these numbers to match your real supplier and printer quotes. blankCost = what you pay for the blank garment. The site recalculates every customer price from this file.",
+  "targetMargin": 0.4,
+  "roundTo": 0.5,
+  "screenPrint": {
+    "minQty": 12,
+    "setupPerScreen": 20,
+    "tiers": [
+      { "minQty": 12, "firstColor": 3.0, "extraColor": 0.75 },
+      { "minQty": 24, "firstColor": 2.25, "extraColor": 0.6 },
+      { "minQty": 48, "firstColor": 1.75, "extraColor": 0.5 },
+      { "minQty": 72, "firstColor": 1.4, "extraColor": 0.4 },
+      { "minQty": 144, "firstColor": 1.1, "extraColor": 0.3 }
+    ]
+  },
+  "digitalPrint": {
+    "_note": "DTF/DTG digital print used for orders under the screen-print minimum. No setup fees, any number of colors.",
+    "perLocation": 6.0
+  },
+  "garments": [
+    { "id": "tee", "name": "Classic Tee", "blankCost": 4.5 },
+    { "id": "premium-tee", "name": "Garment-Dyed Tee (Comfort Colors style)", "blankCost": 7.5 },
+    { "id": "longsleeve", "name": "Long Sleeve Tee", "blankCost": 8.0 },
+    { "id": "crewneck", "name": "Crewneck Sweatshirt", "blankCost": 12.0 },
+    { "id": "hoodie", "name": "Hoodie", "blankCost": 15.0 },
+    { "id": "quarterzip", "name": "Quarter-Zip", "blankCost": 18.0 }
+  ],
+  "maxColorsPerLocation": 6
+}

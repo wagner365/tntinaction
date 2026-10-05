@@ -1,0 +1,46 @@
+{
+  "_readme": "Example group order. Copy this file to stores/<org-name>.json, edit it, and share store.html?s=<org-name>. Update 'ordered' as orders come in.",
+  "org": "Example Club Lacrosse",
+  "title": "Spring 2027 Team Merch",
+  "blurb": "Official team gear for the spring season. Orders close Sunday night, and everything is delivered to practice, sorted by name.",
+  "closes": "2027-03-07T23:59:00-05:00",
+  "delivery": "Delivered to practice ~Mar 18",
+  "minimum": 24,
+  "ordered": 9,
+  "fundraiser": { "perItem": 5, "beneficiary": "the team travel fund" },
+  "products": [
+    {
+      "name": "Team Hoodie",
+      "type": "hoodie",
+      "color": "#13213c",
+      "inkColor": "#ffffff",
+      "printText": "LACROSSE",
+      "price": 40,
+      "sizes": ["S", "M", "L", "XL", "2XL"],
+      "description": "Heavyweight fleece hoodie, 1-color front print.",
+      "payLink": ""
+    },
+    {
+      "name": "Practice Tee",
+      "type": "tee",
+      "color": "#e4472b",
+      "inkColor": "#ffffff",
+      "printText": "LAX",
+      "price": 20,
+      "sizes": ["S", "M", "L", "XL", "2XL"],
+      "description": "Garment-dyed tee, front and back print.",
+      "payLink": ""
+    },
+    {
+      "name": "Crewneck",
+      "type": "crewneck",
+      "color": "#d8cfbd",
+      "inkColor": "#13213c",
+      "printText": "EST. 2027",
+      "price": 35,
+      "sizes": ["S", "M", "L", "XL"],
+      "description": "Midweight crewneck, embroidered-look print.",
+      "payLink": ""
+    }
+  ]
+}
