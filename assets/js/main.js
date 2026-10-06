@@ -3,6 +3,10 @@ import { applySite, loadJson, money } from './site.js';
 
 const [site, pricing] = await Promise.all([applySite(), loadJson('data/pricing.json')]);
 
+// Turnaround promise follows whichever supplier is active.
+const turnaround = pricing.suppliers[pricing.activeSupplier]?.turnaroundBusinessDays;
+if (turnaround) document.querySelectorAll('[data-turnaround]').forEach((el) => (el.textContent = turnaround));
+
 // ---- Price calculator ----
 const calcForm = document.getElementById('calc-form');
 const garmentSelect = document.getElementById('garment');

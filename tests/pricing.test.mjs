@@ -1,9 +1,33 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { quote, fundraiser, nextPriceBreak, roundUp } from '../assets/js/pricing.js';
+import { quote, compareSuppliers, fundraiser, nextPriceBreak, roundUp } from '../assets/js/pricing.js';
 
-const config = JSON.parse(readFileSync(new URL('../data/pricing.json', import.meta.url)));
+const real = JSON.parse(readFileSync(new URL('../data/pricing.json', import.meta.url)));
+
+// Fixed numbers so tests don't break every time real costs are edited.
+const config = {
+  activeSupplier: 'pod',
+  targetMargin: 0.4,
+  roundTo: 0.5,
+  maxColorsPerLocation: 6,
+  garments: [
+    { id: 'tee', name: 'Tee' },
+    { id: 'hoodie', name: 'Hoodie' },
+  ],
+  suppliers: {
+    pod: {
+      name: 'POD', method: 'digital', turnaroundBusinessDays: 8,
+      garmentCost: { tee: 10, hoodie: 20 }, extraLocation: 5, shippingPerPiece: 1,
+      qtyDiscounts: [{ minQty: 1, pct: 0 }, { minQty: 25, pct: 0.2 }],
+    },
+    screen: {
+      name: 'Screen', method: 'screen', turnaroundBusinessDays: 7, fallbackSupplier: 'pod',
+      blankCost: { tee: 4 }, minQty: 24, setupPerScreen: 20, shippingPerPiece: 0,
+      tiers: [{ minQty: 24, firstColor: 2, extraColor: 0.5 }, { minQty: 48, firstColor: 1.5, extraColor: 0.5 }],
+    },
+  },
+};
 
 test('roundUp rounds up to the step and tolerates float noise', () => {
   assert.equal(roundUp(12.01, 0.5), 12.5);
@@ -11,37 +35,39 @@ test('roundUp rounds up to the step and tolerates float noise', () => {
   assert.equal(roundUp(12.37, 0), 12.37);
 });
 
-test('48 tees, 1-color front, uses screen print with setup folded in', () => {
-  const q = quote(config, { garmentId: 'tee', qty: 48, frontColors: 1, backColors: 0 });
-  // cost = 4.50 blank + 1.75 print + 20/48 setup = 6.6667 -> /0.6 = 11.11 -> 11.50
-  assert.equal(q.method, 'screen');
-  assert.equal(q.unitCost, 6.67);
-  assert.equal(q.unitPrice, 11.5);
-  assert.equal(q.total, 552);
-});
-
-test('extra colors and back print add cost and screens', () => {
-  const one = quote(config, { garmentId: 'hoodie', qty: 24, frontColors: 1, backColors: 0 });
-  const many = quote(config, { garmentId: 'hoodie', qty: 24, frontColors: 2, backColors: 3 });
-  assert.ok(many.unitPrice > one.unitPrice);
-  // 15 + (2.25+0.6) + (2.25+1.2) + 5 screens*20/24
-  assert.equal(many.unitCost, cents(15 + 2.85 + 3.45 + 100 / 24));
-});
-
-test('small orders switch to digital print with no setup', () => {
-  const q = quote(config, { garmentId: 'tee', qty: 6, frontColors: 4, backColors: 0 });
+test('digital: base + shipping, margin applied, colors ignored', () => {
+  const q = quote(config, { garmentId: 'tee', qty: 10, frontColors: 5, backColors: 0 });
+  // (10 + 1) / 0.6 = 18.33 -> 18.50
   assert.equal(q.method, 'digital');
-  assert.equal(q.unitCost, 10.5);
-  assert.equal(q.unitPrice, 17.5);
+  assert.equal(q.unitCost, 11);
+  assert.equal(q.unitPrice, 18.5);
+  assert.equal(q.total, 185);
+  assert.equal(q.turnaroundBusinessDays, 8);
 });
 
-test('bigger orders never cost more per unit', () => {
-  let last = Infinity;
-  for (const qty of [12, 24, 48, 72, 144, 300]) {
-    const { unitPrice } = quote(config, { garmentId: 'tee', qty, frontColors: 2, backColors: 1 });
-    assert.ok(unitPrice <= last, `price went up at qty ${qty}`);
-    last = unitPrice;
-  }
+test('digital: bulk discount and extra print location', () => {
+  const q = quote(config, { garmentId: 'tee', qty: 25, frontColors: 1, backColors: 1 });
+  // 10*0.8 + 5 + 1 = 14
+  assert.equal(q.unitCost, 14);
+});
+
+test('screen: blank + per-color print + setup spread over qty', () => {
+  const q = quote(config, { garmentId: 'tee', qty: 48, frontColors: 2, backColors: 0, supplier: 'screen' });
+  // 4 + (1.5 + 0.5) + 2 screens * 20 / 48
+  assert.equal(q.method, 'screen');
+  assert.equal(q.unitCost, Math.round((6 + 40 / 48) * 100) / 100);
+});
+
+test('screen falls back to its backup supplier under the minimum', () => {
+  const q = quote(config, { garmentId: 'tee', qty: 10, frontColors: 1, backColors: 0, supplier: 'screen' });
+  assert.equal(q.method, 'digital');
+  assert.equal(q.supplier, 'POD');
+});
+
+test('compareSuppliers reports errors per supplier instead of throwing', () => {
+  const rows = compareSuppliers(config, { garmentId: 'hoodie', qty: 30, frontColors: 1, backColors: 0 });
+  assert.equal(rows.find((r) => r.id === 'pod').unitCost, 17);
+  assert.match(rows.find((r) => r.id === 'screen').error, /doesn't offer/);
 });
 
 test('rejects bad input', () => {
@@ -49,18 +75,32 @@ test('rejects bad input', () => {
   assert.throws(() => quote(config, { garmentId: 'tee', qty: 0, frontColors: 1 }), /at least 1/);
   assert.throws(() => quote(config, { garmentId: 'tee', qty: 10, frontColors: 0, backColors: 0 }), /print location/);
   assert.throws(() => quote(config, { garmentId: 'tee', qty: 10, frontColors: 9 }), /between 0 and/);
+  assert.throws(() => quote(config, { garmentId: 'tee', qty: 10, frontColors: 1, supplier: 'x' }), /Unknown supplier/);
 });
 
 test('fundraiser math', () => {
   assert.deepEqual(fundraiser(11.5, 20, 48), { perItem: 8.5, total: 408 });
 });
 
-test('nextPriceBreak', () => {
-  assert.equal(nextPriceBreak(config, 6), 12);
-  assert.equal(nextPriceBreak(config, 30), 48);
-  assert.equal(nextPriceBreak(config, 200), null);
+test('nextPriceBreak follows the supplier and its fallback', () => {
+  assert.equal(nextPriceBreak(config, 6), 25);
+  assert.equal(nextPriceBreak(config, 30), null);
+  assert.equal(nextPriceBreak(config, 10, 'screen'), 24);
+  assert.equal(nextPriceBreak(config, 30, 'screen'), 48);
 });
 
-function cents(n) {
-  return Math.round(n * 100) / 100;
-}
+// Sanity checks on the real pricing file, so a typo never reaches the site.
+test('real pricing file: every supplier prices every garment it lists, and bulk never costs more', () => {
+  assert.ok(real.suppliers[real.activeSupplier], 'activeSupplier must exist');
+  for (const id of Object.keys(real.suppliers)) {
+    for (const g of real.garments) {
+      let last = Infinity;
+      for (const qty of [1, 12, 24, 48, 72, 144, 300]) {
+        const q = quote(real, { garmentId: g.id, qty, frontColors: 1, backColors: 0, supplier: id });
+        assert.ok(q.unitPrice > q.unitCost, `${id}/${g.id}: price must exceed cost`);
+        assert.ok(q.unitPrice <= last, `${id}/${g.id}: price went up at qty ${qty}`);
+        last = q.unitPrice;
+      }
+    }
+  }
+});

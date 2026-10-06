@@ -17,7 +17,53 @@ function tierFor(tiers, qty) {
   return match;
 }
 
-// input: { garmentId, qty, frontColors, backColors }
+function getSupplier(config, id) {
+  const supplier = config.suppliers[id];
+  if (!supplier) throw new Error(`Unknown supplier: ${id}`);
+  return supplier;
+}
+
+// Cost to us for one piece, before margin.
+function unitCostFor(config, supplierId, garmentId, qty, printedSides) {
+  const supplier = getSupplier(config, supplierId);
+
+  if (supplier.method === 'screen') {
+    if (qty < supplier.minQty) {
+      if (!supplier.fallbackSupplier) {
+        throw new Error(`Screen printing needs at least ${supplier.minQty} pieces`);
+      }
+      return unitCostFor(config, supplier.fallbackSupplier, garmentId, qty, printedSides);
+    }
+    const blank = supplier.blankCost[garmentId];
+    if (blank === undefined) throw new Error(`${supplier.name} doesn't offer this garment`);
+    const tier = tierFor(supplier.tiers, qty);
+    const decoration = printedSides.reduce((sum, colors) => sum + tier.firstColor + (colors - 1) * tier.extraColor, 0);
+    const screens = printedSides.reduce((sum, colors) => sum + colors, 0);
+    const screen = {
+      cost: blank + decoration + (screens * supplier.setupPerScreen) / qty + (supplier.shippingPerPiece ?? 0),
+      method: 'screen',
+      supplierId,
+    };
+    // Small screen runs with many colors can cost more than digital; use whichever is cheaper.
+    if (supplier.fallbackSupplier) {
+      const backup = unitCostFor(config, supplier.fallbackSupplier, garmentId, qty, printedSides);
+      if (backup.cost < screen.cost) return backup;
+    }
+    return screen;
+  }
+
+  // Digital (DTG/DTF): color count doesn't matter, only how many places are printed.
+  const base = supplier.garmentCost[garmentId];
+  if (base === undefined) throw new Error(`${supplier.name} doesn't offer this garment`);
+  const discount = tierFor(supplier.qtyDiscounts, qty)?.pct ?? 0;
+  return {
+    cost: base * (1 - discount) + (printedSides.length - 1) * supplier.extraLocation + (supplier.shippingPerPiece ?? 0),
+    method: 'digital',
+    supplierId,
+  };
+}
+
+// input: { garmentId, qty, frontColors, backColors, supplier? }
 // frontColors/backColors = number of ink colors on that side (0 = not printed).
 export function quote(config, input) {
   const garment = config.garments.find((g) => g.id === input.garmentId);
@@ -33,36 +79,34 @@ export function quote(config, input) {
   const printedSides = sides.filter((c) => c > 0);
   if (printedSides.length === 0) throw new Error('Pick at least one print location');
 
-  const useScreen = qty >= config.screenPrint.minQty;
-  let decorationPerUnit;
-  let setupFee = 0;
-
-  if (useScreen) {
-    const tier = tierFor(config.screenPrint.tiers, qty);
-    decorationPerUnit = printedSides.reduce(
-      (sum, colors) => sum + tier.firstColor + (colors - 1) * tier.extraColor,
-      0
-    );
-    const screens = printedSides.reduce((sum, colors) => sum + colors, 0);
-    setupFee = screens * config.screenPrint.setupPerScreen;
-  } else {
-    decorationPerUnit = printedSides.length * config.digitalPrint.perLocation;
-  }
-
-  // Setup is folded into the unit price so customers see one all-in number.
-  const unitCost = garment.blankCost + decorationPerUnit + setupFee / qty;
-  const unitPrice = roundUp(unitCost / (1 - config.targetMargin), config.roundTo);
+  const supplierId = input.supplier ?? config.activeSupplier;
+  const { cost, method, supplierId: usedId } = unitCostFor(config, supplierId, garment.id, qty, printedSides);
+  const used = getSupplier(config, usedId);
+  const unitPrice = roundUp(cost / (1 - config.targetMargin), config.roundTo);
   const total = cents(unitPrice * qty);
 
   return {
     garment: garment.name,
-    method: useScreen ? 'screen' : 'digital',
+    supplier: used.name,
+    method,
     qty,
-    unitCost: cents(unitCost),
+    turnaroundBusinessDays: used.turnaroundBusinessDays,
+    unitCost: cents(cost),
     unitPrice,
     total,
-    profit: cents(total - unitCost * qty),
+    profit: cents(total - cost * qty),
   };
+}
+
+// Same order priced with every supplier, for deciding who to use.
+export function compareSuppliers(config, input) {
+  return Object.keys(config.suppliers).map((id) => {
+    try {
+      return { id, ...quote(config, { ...input, supplier: id }) };
+    } catch (err) {
+      return { id, error: err.message };
+    }
+  });
 }
 
 // What a student org raises if members pay memberPrice and we charge unitPrice.
@@ -73,8 +117,14 @@ export function fundraiser(unitPrice, memberPrice, qty) {
 
 // Quantity where the next price break starts, so the UI can nudge
 // "order 6 more and save $X each". Returns null when already at the top tier.
-export function nextPriceBreak(config, qty) {
-  const breaks = [config.screenPrint.minQty, ...config.screenPrint.tiers.map((t) => t.minQty)];
-  const next = [...new Set(breaks)].sort((a, b) => a - b).find((b) => b > qty);
-  return next ?? null;
+export function nextPriceBreak(config, qty, supplierId = config.activeSupplier) {
+  const breaks = [];
+  const collect = (id) => {
+    const s = getSupplier(config, id);
+    for (const t of s.qtyDiscounts ?? s.tiers ?? []) breaks.push(t.minQty);
+    if (s.minQty) breaks.push(s.minQty);
+    if (s.fallbackSupplier) collect(s.fallbackSupplier);
+  };
+  collect(supplierId);
+  return breaks.sort((a, b) => a - b).find((b) => b > qty) ?? null;
 }

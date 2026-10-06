@@ -38,6 +38,20 @@ test('buildReport groups by product and size, skips unpaid rows', () => {
   );
 });
 
+test('Square Item Detail export: sizes from Price Point Name, refund rows subtract', () => {
+  const csv = [
+    'Date,Category,Item,Qty,Price Point Name,SKU,Gross Sales,Event Type,Customer Name',
+    '2027-03-01,Merch,Team Hoodie,1,M,,$40.00,Payment,A',
+    '2027-03-01,Merch,Team Hoodie,2,Large,,$80.00,Payment,B',
+    '2027-03-02,Merch,Team Hoodie,-1,Large,,-$40.00,Refund,B',
+    '2027-03-02,Merch,Practice Tee,1,S,,$20.00,Payment,C',
+    '2027-03-03,Merch,Practice Tee,1,S,,-$20.00,Refund,C',
+  ].join('\n');
+  const r = buildReport(csv);
+  assert.deepEqual(r.products, [{ name: 'Team Hoodie', perSize: [1, 1], total: 2 }]);
+  assert.deepEqual(r.sizes, ['M', 'L']);
+});
+
 test('explicit column names and a clear error when missing', () => {
   const csv = 'Pick your fit,What,Count\nL,Tee,2\n';
   assert.equal(buildReport(csv, { sizeCol: 'Pick your fit', productCol: 'What', qtyCol: 'Count' }).grandTotal, 2);

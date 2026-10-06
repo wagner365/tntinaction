@@ -1,29 +1,63 @@
 {
-  "_readme": "All prices in USD. Edit these numbers to match your real supplier and printer quotes. blankCost = what you pay for the blank garment. The site recalculates every customer price from this file.",
+  "_readme": "All prices in USD. 'activeSupplier' decides which costs the website uses. Numbers marked as estimates in docs/suppliers.md should be replaced with real quotes before launch. Run `npm run compare` to see every supplier side by side.",
+  "activeSupplier": "printful",
   "targetMargin": 0.4,
   "roundTo": 0.5,
-  "screenPrint": {
-    "minQty": 12,
-    "setupPerScreen": 20,
-    "tiers": [
-      { "minQty": 12, "firstColor": 3.0, "extraColor": 0.75 },
-      { "minQty": 24, "firstColor": 2.25, "extraColor": 0.6 },
-      { "minQty": 48, "firstColor": 1.75, "extraColor": 0.5 },
-      { "minQty": 72, "firstColor": 1.4, "extraColor": 0.4 },
-      { "minQty": 144, "firstColor": 1.1, "extraColor": 0.3 }
-    ]
-  },
-  "digitalPrint": {
-    "_note": "DTF/DTG digital print used for orders under the screen-print minimum. No setup fees, any number of colors.",
-    "perLocation": 6.0
-  },
+  "maxColorsPerLocation": 6,
   "garments": [
-    { "id": "tee", "name": "Classic Tee", "blankCost": 4.5 },
-    { "id": "premium-tee", "name": "Garment-Dyed Tee (Comfort Colors style)", "blankCost": 7.5 },
-    { "id": "longsleeve", "name": "Long Sleeve Tee", "blankCost": 8.0 },
-    { "id": "crewneck", "name": "Crewneck Sweatshirt", "blankCost": 12.0 },
-    { "id": "hoodie", "name": "Hoodie", "blankCost": 15.0 },
-    { "id": "quarterzip", "name": "Quarter-Zip", "blankCost": 18.0 }
+    { "id": "tee", "name": "Classic Tee" },
+    { "id": "premium-tee", "name": "Garment-Dyed Tee (Comfort Colors style)" },
+    { "id": "longsleeve", "name": "Long Sleeve Tee" },
+    { "id": "crewneck", "name": "Crewneck Sweatshirt" },
+    { "id": "hoodie", "name": "Hoodie" }
   ],
-  "maxColorsPerLocation": 6
+  "suppliers": {
+    "printful": {
+      "name": "Printful (bulk order shipped to you)",
+      "method": "digital",
+      "turnaroundBusinessDays": 8,
+      "_costs": "Cost per piece INCLUDING one print location, before bulk discount. Check your Printful dashboard.",
+      "garmentCost": { "tee": 9.25, "premium-tee": 14.5, "longsleeve": 13.5, "crewneck": 18.5, "hoodie": 22.75 },
+      "extraLocation": 5.5,
+      "shippingPerPiece": 0.75,
+      "qtyDiscounts": [
+        { "minQty": 1, "pct": 0 },
+        { "minQty": 25, "pct": 0.16 },
+        { "minQty": 50, "pct": 0.25 },
+        { "minQty": 100, "pct": 0.35 }
+      ]
+    },
+    "dtf": {
+      "name": "Heat press + DTF transfers (you press it)",
+      "method": "digital",
+      "turnaroundBusinessDays": 5,
+      "_costs": "Wholesale blank + one ~10in DTF transfer. Needs a heat press (~$200-400 one time) and a free wholesale account (S&S Activewear or SanMar).",
+      "garmentCost": { "tee": 6.0, "premium-tee": 10.0, "longsleeve": 8.5, "crewneck": 11.5, "hoodie": 14.5 },
+      "extraLocation": 2.5,
+      "shippingPerPiece": 0.5,
+      "qtyDiscounts": [
+        { "minQty": 1, "pct": 0 },
+        { "minQty": 15, "pct": 0.05 },
+        { "minQty": 50, "pct": 0.1 },
+        { "minQty": 100, "pct": 0.15 }
+      ]
+    },
+    "local-screen": {
+      "name": "Local screen printer (contract rate)",
+      "method": "screen",
+      "turnaroundBusinessDays": 7,
+      "_costs": "Placeholder until you get a real quote from an Oxford shop. Under minQty it falls back to the dtf supplier.",
+      "fallbackSupplier": "dtf",
+      "blankCost": { "tee": 4.0, "premium-tee": 8.0, "longsleeve": 6.5, "crewneck": 10.0, "hoodie": 13.0 },
+      "minQty": 24,
+      "setupPerScreen": 20,
+      "shippingPerPiece": 0,
+      "tiers": [
+        { "minQty": 24, "firstColor": 2.25, "extraColor": 0.6 },
+        { "minQty": 48, "firstColor": 1.75, "extraColor": 0.5 },
+        { "minQty": 72, "firstColor": 1.4, "extraColor": 0.4 },
+        { "minQty": 144, "firstColor": 1.1, "extraColor": 0.3 }
+      ]
+    }
+  }
 }

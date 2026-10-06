@@ -1,11 +1,10 @@
 {
   "_readme": "Business details shown across the site. Change these and every page updates.",
-  "brandName": "TNT Custom Co.",
+  "brandName": "The Northern Threads",
   "tagline": "Custom merch for every club on campus.",
   "campus": "Oxford, OH",
   "contactEmail": "",
   "instagram": "",
   "formEndpoint": "",
-  "turnaroundBusinessDays": 8,
   "mockupHours": 24
 }

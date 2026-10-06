@@ -18,9 +18,8 @@ export async function applySite(base = '') {
   };
   fill('[data-brand]', site.brandName);
   fill('[data-campus]', site.campus);
-  fill('[data-turnaround]', site.turnaroundBusinessDays);
   fill('[data-mockup]', site.mockupHours);
-  document.title = document.title.replace('TNT Custom Co.', site.brandName);
+  document.title = document.title.replace('The Northern Threads', site.brandName);
 
   const contact = document.getElementById('footer-contact');
   if (contact) {

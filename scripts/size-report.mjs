@@ -76,22 +76,26 @@ function findColumn(headers, explicit, patterns) {
   return -1;
 }
 
-const PAID = /^(paid|succeeded|complete|completed)$/i;
+const PAID = /^(paid|succeeded|complete|completed|payment)$/i;
 
 export function buildReport(csvText, opts = {}) {
   const [headers, ...rows] = parseCsv(csvText);
   if (!headers) throw new Error('CSV is empty');
 
-  const sizeIdx = findColumn(headers, opts.sizeCol, [/size/i]);
+  // "Price Point Name" is the variation (size) column in Square's Item Detail export.
+  const sizeIdx = findColumn(headers, opts.sizeCol, [/size/i, /^price point name$/i, /variation/i]);
   if (sizeIdx === -1) throw new Error(`No size column found. Columns: ${headers.join(', ')}. Use --size-col.`);
-  const productIdx = findColumn(headers, opts.productCol, [/product/i, /item/i, /description/i]);
+  const productIdx = findColumn(headers, opts.productCol, [/product/i, /^item$/i, /item/i, /description/i]);
   const qtyIdx = findColumn(headers, opts.qtyCol, [/^quantity$/i, /^qty$/i]);
-  const statusIdx = findColumn(headers, null, [/^status$/i]);
+  // Stripe uses "Status"; Square uses "Event Type" (Payment / Refund rows).
+  const statusIdx = findColumn(headers, null, [/^status$/i, /^event type$/i]);
 
   const counts = new Map(); // product -> Map(size -> qty)
   let skipped = 0;
   for (const row of rows) {
-    if (statusIdx !== -1 && !PAID.test(row[statusIdx]?.trim() ?? '')) {
+    const status = statusIdx === -1 ? '' : row[statusIdx]?.trim() ?? '';
+    const isRefundRow = /^refund$/i.test(status);
+    if (statusIdx !== -1 && !PAID.test(status) && !isRefundRow) {
       skipped++;
       continue;
     }
@@ -101,11 +105,17 @@ export function buildReport(csvText, opts = {}) {
       continue;
     }
     const product = productIdx === -1 ? 'Item' : (row[productIdx] ?? '').trim() || 'Item';
-    const qty = qtyIdx === -1 ? 1 : Math.max(0, parseInt(row[qtyIdx], 10) || 0);
+    const rawQty = qtyIdx === -1 ? 1 : Math.abs(parseFloat(row[qtyIdx]) || 0);
+    // A separate refund row takes pieces back out of the count.
+    const qty = isRefundRow ? -rawQty : rawQty;
     if (!counts.has(product)) counts.set(product, new Map());
     const bySize = counts.get(product);
     bySize.set(size, (bySize.get(size) ?? 0) + qty);
   }
+  for (const bySize of counts.values()) {
+    for (const [size, n] of bySize) if (n <= 0) bySize.delete(size);
+  }
+  for (const [product, bySize] of counts) if (bySize.size === 0) counts.delete(product);
 
   const allSizes = new Set();
   for (const bySize of counts.values()) for (const s of bySize.keys()) allSizes.add(s);
