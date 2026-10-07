@@ -42,17 +42,20 @@ function mockup(product) {
   return svg;
 }
 
-function productCard(product, isOpen) {
+function productCard(product, isOpen, store) {
+  // Free stores (sponsored club orders) collect sizes with a claim form instead of a payment link.
+  const free = store.free === true;
+  const link = free ? product.claimLink || store.claimLink : product.payLink;
   const img = product.image
     ? el('img', { src: product.image, alt: product.name, loading: 'lazy' })
     : mockup(product);
 
   const sizes = el('div', { className: 'sizes' }, (product.sizes ?? []).map((s) => el('span', { textContent: s })));
-  const canBuy = isOpen && product.payLink;
+  const canBuy = isOpen && link;
   const button = el('a', {
     className: 'btn',
-    href: canBuy ? product.payLink : '#',
-    textContent: !isOpen ? 'Order closed' : product.payLink ? 'Order now' : 'Opening soon',
+    href: canBuy ? link : '#',
+    textContent: !isOpen ? (free ? 'Claims closed' : 'Order closed') : !link ? 'Opening soon' : free ? 'Claim yours' : 'Order now',
     rel: 'noopener',
   });
   if (!canBuy) button.setAttribute('aria-disabled', 'true');
@@ -61,17 +64,17 @@ function productCard(product, isOpen) {
     el('div', { className: 'product-img' }, [img]),
     el('div', { className: 'product-body' }, [
       el('h3', { textContent: product.name }),
-      el('p', { className: 'price', textContent: money(product.price) }),
+      el('p', { className: 'price', textContent: free ? 'Free' : money(product.price) }),
       product.description ? el('p', { textContent: product.description }) : '',
       sizes,
-      el('p', { textContent: 'Pick your size at checkout.' }),
+      el('p', { textContent: free ? 'Pick your size on the claim form.' : 'Pick your size at checkout.' }),
       button,
     ]),
   ]);
 }
 
 async function main() {
-  await applySite();
+  const site = await applySite();
   const slug = new URLSearchParams(location.search).get('s') || 'demo';
   if (!/^[a-z0-9-]+$/.test(slug)) throw new Error('That order link looks wrong.');
 
@@ -91,7 +94,7 @@ async function main() {
   const pills = [
     el('span', {
       className: `pill ${status.isOpen ? 'live' : 'closed'}`,
-      textContent: status.isOpen ? `Open · ${status.timeLeft} left` : 'Order closed',
+      textContent: status.isOpen ? `Open · ${status.timeLeft} left` : store.free ? 'Claims closed' : 'Order closed',
     }),
     el('span', { className: 'pill', textContent: `Closes ${status.closesLabel}` }),
   ];
@@ -103,7 +106,12 @@ async function main() {
     const bar = el('div', { className: 'progress' }, [el('span')]);
     bar.firstChild.style.width = `${pct}%`;
     $('store-progress').replaceChildren(
-      el('p', { className: 'muted', textContent: `${store.ordered ?? 0} of ${store.minimum} pieces ordered toward the minimum` }),
+      el('p', {
+        className: 'muted',
+        textContent: store.free
+          ? `${store.ordered ?? 0} of ${store.minimum} claimed`
+          : `${store.ordered ?? 0} of ${store.minimum} pieces ordered toward the minimum`,
+      }),
       bar
     );
   }
@@ -117,9 +125,13 @@ async function main() {
       })
     );
   }
+  if (store.free) {
+    notices.push(el('p', { className: 'notice', textContent: `Free for ${store.org} members, courtesy of ${site.brandName}.` }));
+    $('store-terms').textContent = `Sponsored by ${site.brandName}. Want merch for your own club? Tap "Get merch for your org" above.`;
+  }
   $('store-notices').replaceChildren(...notices);
 
-  $('products').replaceChildren(...store.products.map((p) => productCard(p, status.isOpen)));
+  $('products').replaceChildren(...store.products.map((p) => productCard(p, status.isOpen, store)));
 }
 
 main().catch((err) => {

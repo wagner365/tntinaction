@@ -27,9 +27,13 @@ test('every store file is valid', () => {
     const store = JSON.parse(readFileSync(new URL(file, dir)));
     for (const key of ['org', 'title', 'closes', 'products']) assert.ok(store[key], `${file}: missing "${key}"`);
     assert.ok(!Number.isNaN(new Date(store.closes).getTime()), `${file}: bad closes date`);
+    if (store.claimLink) assert.match(store.claimLink, /^https:\/\//, `${file}: claimLink must be an https link`);
     for (const p of store.products) {
-      assert.ok(p.name && typeof p.price === 'number' && p.price > 0, `${file}: product needs name and price`);
-      if (p.payLink) assert.match(p.payLink, /^https:\/\//, `${file}: payLink must be an https link`);
+      const priceOk = typeof p.price === 'number' && (store.free ? p.price >= 0 : p.price > 0);
+      assert.ok(p.name && priceOk, `${file}: product needs a name and a price${store.free ? '' : ' above 0'}`);
+      for (const key of ['payLink', 'claimLink']) {
+        if (p[key]) assert.match(p[key], /^https:\/\//, `${file}: ${key} must be an https link`);
+      }
     }
   }
 });

@@ -10,7 +10,8 @@ Custom merch for student orgs: a website with instant pricing, a fundraiser calc
 | `npm run compare` | Prices the same order with every supplier side by side |
 | `docs/competitor-south-by-sea.md` | Competitor brief and positioning |
 | `docs/suppliers.md` | Printful vs DTF vs local screen printers, with a recommendation |
-| `docs/beta-program.md` | How to land your first 3–5 clubs |
+| `docs/local-printers.md` | Oxford-area screen printers and how to get reseller pricing |
+| `docs/beta-program.md` | Founding Clubs plan (free orders for Applied AI Club and Side Hustle Club) |
 
 ## Files you'll edit
 - **`data/site.json`**: brand name, campus, contact email, Instagram, form endpoint.
@@ -47,6 +48,9 @@ Until `contactEmail` or `formEndpoint` is set in `data/site.json`, the form only
 8. **Below the minimum?** Refund everyone from Square.
 
 Exported CSVs contain customer names, so `*.csv` is git-ignored. Never commit them.
+
+## Free (sponsored) orders
+Set `"free": true` and a `claimLink` (a Google Form with Name, Email, Size) in the store file. The page then shows "Free" and a "Claim yours" button instead of payment links. See `stores/applied-ai-club.json` and `docs/beta-program.md`.
 
 ## Check your work
 ```
