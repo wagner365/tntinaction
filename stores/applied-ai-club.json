@@ -2,21 +2,27 @@
   "_readme": "Founding Club #1: free sponsored order. Before sharing: confirm the design and close date with the club, create a Google Form (name, email, size) and paste its link into claimLink. Update 'ordered' as claims come in.",
   "org": "Applied AI Club",
   "title": "Founding Club Merch",
-  "blurb": "Free club tees for Applied AI Club members, our very first Founding Club. Claim yours by the deadline and we'll hand them out at a meeting.",
+  "blurb": "Free custom tees for Applied AI Club members. Your club picks the design, or we'll make one for you. Claim yours by the deadline and we'll hand them out at a meeting.",
   "free": true,
   "claimLink": "",
   "closes": "2026-10-25T23:59:00-04:00",
   "delivery": "Handed out at a club meeting",
   "products": [
     {
-      "name": "Applied AI Club Tee",
+      "name": "Club Tee",
       "type": "tee",
       "color": "#13213c",
       "inkColor": "#ffffff",
-      "printText": "APPLIED AI",
+      "printText": "YOUR DESIGN",
       "price": 0,
-      "sizes": ["S", "M", "L", "XL", "2XL"],
-      "description": "Soft classic tee, club logo on the front. Design is a placeholder until the club approves the mockup."
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "2XL"
+      ],
+      "description": "Your club's design on a soft classic tee. Bring your own design, or we'll create one for you, free."
     }
   ]
 }

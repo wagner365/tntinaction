@@ -2,21 +2,27 @@
   "_readme": "Founding Club #2: free sponsored order. Same setup as applied-ai-club.json. Dates are placeholders.",
   "org": "Side Hustle Club",
   "title": "Founding Club Merch",
-  "blurb": "Free club tees for Side Hustle Club members, courtesy of a fellow member's brand. Claim yours by the deadline and we'll hand them out at a meeting.",
+  "blurb": "Free custom tees for Side Hustle Club members. Your club picks the design, or we'll make one for you. Claim yours by the deadline and we'll hand them out at a meeting.",
   "free": true,
   "claimLink": "",
   "closes": "2026-11-08T23:59:00-05:00",
   "delivery": "Handed out at a club meeting",
   "products": [
     {
-      "name": "Side Hustle Club Tee",
+      "name": "Club Tee",
       "type": "tee",
       "color": "#e4472b",
       "inkColor": "#ffffff",
-      "printText": "SIDE HUSTLE",
+      "printText": "YOUR DESIGN",
       "price": 0,
-      "sizes": ["S", "M", "L", "XL", "2XL"],
-      "description": "Soft classic tee, club logo on the front. Design is a placeholder until the club approves the mockup."
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "2XL"
+      ],
+      "description": "Your club's design on a soft classic tee. Bring your own design, or we'll create one for you, free."
     }
   ]
 }

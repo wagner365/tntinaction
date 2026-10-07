@@ -64,6 +64,44 @@ Shops outside Oxford are less likely to see you as a competitor for campus custo
 - Ask for **"blind" packing**, with no shop branding on boxes or bags, if they'll deliver directly.
 - Get **pricing in writing** before quoting a club, so your margin is locked.
 
+## Pricing with Lebowski (estimates until you get their price list)
+**What's known about Lebowski:** 6-piece minimum per design, a price break at 10+ pieces, and charges per color screen, per side. Foil adds $3 per shirt. They don't publish a price list, so **call 513-523-8337 and ask for one**. Everything below uses typical 2026 local-shop rates:
+- 24 tees, 1 color: about $9.75 each
+- 25–48 tees: $9–14
+- 49–72 tees: $7–11
+- Screens: $15–35 per color
+- Each extra color: +$0.75–1.50 per shirt
+
+### 48 classic tees, 1-color front (what you'd charge: $14.50 each)
+| Route | Your cost per tee | Your profit per tee | Profit on the order | Margin |
+|---|---|---|---|---|
+| Lebowski, **retail price** (~$10 + $25 screen) | ~$10.50 | ~$4.00 | ~$191 | ~27% |
+| Lebowski, **reseller rate** (~20% off) | ~$8.40 | ~$6.10 | ~$293 | ~42% |
+| Printful bulk | ~$8.52 | ~$5.98 | ~$287 | ~41% |
+| DTF, you press | ~$6.20 | ~$8.30 | ~$398 | ~57% |
+
+**What this means:**
+- **At retail price, Lebowski isn't worth it** for normal orders. You'd make about half what DTF earns.
+- **At a reseller rate, Lebowski roughly matches Printful.** You also get local pickup, no shipping wait, and real screen print quality, which feels nicer and lasts longer than DTF on big runs.
+- **Lebowski wins on:** 72+ piece orders (screen print gets much cheaper at volume), rush jobs, embroidery (hats, quarter-zips) and **anything with Miami or Greek marks**.
+- **DTF wins on:** small orders, full-color designs, and anything under about 48 pieces.
+
+### Licensed orders (Miami marks) through Lebowski
+Miami's standard royalty is **12%** of the licensed product's price, and it's built into Lebowski's price. Expect a licensed tee to cost about **$1.25 more** (~$11.75 instead of ~$10.50 at retail). You'd charge the club about **$16–17** to keep a decent margin. Still worth doing: it's an order you otherwise couldn't take at all.
+
+### Miami's Crafter License (your own small Miami license)
+Miami also offers a **Crafter License**: $100 advance royalty per year. You submit samples and mockups for approval, add the official hologram sticker, sell only direct to consumers, and you're capped at **500 items or $2,000 per year** in total. It could cover a small Miami-branded drop for Northern Threads. One big club order would hit the cap fast, so for clubs, use Lebowski. **Confirm the details with Miami's Office of Trademarks and Licensing.**
+
+### When you call Lebowski, get these numbers
+1. Price for 24 / 48 / 72 Gildan 5000 (or similar) tees, 1-color front
+2. Same with a 1-color back added
+3. Screen fee per color, and whether they waive it on reorders
+4. Hoodie price at 24 and 48 (Gildan 18500 or similar)
+5. Do they offer a reseller/wholesale discount, and at what volume?
+6. Do they pay a referral fee for licensed orders you send them?
+
+Send me the answers and I'll load them into `data/pricing.json` (the `local-screen` supplier). Then `npm run compare` shows exactly where Lebowski beats DTF and Printful.
+
 ## The licensing play
 Miami logos and Greek letters need licenses that you don't have. **Lebowski already has both.** If a club insists on Miami marks, you have two options:
 - **Refer the order** to Lebowski for a referral fee. Ask whether they pay one.
@@ -81,3 +119,8 @@ Run `npm run compare` with a real quote in the `local-screen` section of `data/p
 - [Hamilton printing services (YellowPages)](https://www.yellowpages.com/hamilton-oh/printing-services)
 - [Contract screen printing requirements](https://www.imagescreenprinting.com/contract/)
 - [Contract printing pricing discussion](https://www.t-shirtforums.com/threads/contract-printing-pricing.565858/)
+- [Lebowski screen printing page](https://www.lebowskitees.com/screen-printing)
+- [Screen printing costs 2026 (Arklavo)](https://arklavo.com/blogs/custom-apparel-guide/screen-printing-cost-guide)
+- [Screen printing costs 2026 (Rolled Up Tees)](https://rolleduptees.com/blog/how-much-does-screen-printing-cost)
+- [Miami trademark licensing FAQ](https://miamioh.edu/university-communications-marketing/trademarks-licensing/faq.html)
+- [Miami Crafter License](https://miamioh.edu/university-communications-marketing/trademarks-licensing/crafter-license.html)
